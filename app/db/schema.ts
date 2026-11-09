@@ -229,6 +229,8 @@ export const purchases = sqliteTable(
   (table) => [index("purchases_course_idx").on(table.courseId)]
 );
 
+// Each row is a Refund Request (see GLOSSARY.md). A Refund only exists once
+// the request is Approved.
 export const refunds = sqliteTable(
   "refunds",
   {
