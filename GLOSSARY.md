@@ -7,15 +7,15 @@ An online course platform where learners buy courses and watch lessons.
 ### Refunds
 
 **Refund Request**:
-A learner's request to get their money back for a Purchase. It is Requested, then either Approved or Declined.
-_Avoid_: Chargeback, Reversal, Cancellation, cancel my purchase
+A learner's request to get their money back for a Purchase. It is Requested until an Admin either Approves or Declines it; both decisions are final.
+_Avoid_: Chargeback, Reversal, Cancellation, cancel my purchase, open request, pending request
 
 **Refund**:
-The money returned to a learner after their Refund Request is Approved. An Approved Refund Request also ends the learner's access to the course.
+The money returned to a learner for a Refunded Purchase: exactly what they paid for it.
 _Avoid_: Reversal, Chargeback
 
 **Refunded**:
-The state of a Purchase whose Refund Request was Approved. The learner no longer has the course.
+The state of a Purchase whose Refund Request was Approved. The learner loses the course at the moment of Approval, whether or not the Refund has been paid out yet.
 _Avoid_: Cancelled, Reversed
 
 **Refund Window**:
