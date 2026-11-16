@@ -41,6 +41,29 @@ async function originRepo(run: RunCommand) {
   return repo;
 }
 
+// Feedback is one or two sentences from someone looking at a page, which is
+// too thin to build from. The label starts the explore workflow
+// (.github/workflows/agent-explore.yml), so the ticket carries findings
+// before anyone decides to build it.
+const EXPLORE_LABEL = "agent:explore";
+
+// `gh issue create --label` fails on a label the repo lacks, and a fresh
+// clone lacks this one. `--force` makes the create a no-op when it exists.
+async function ensureExploreLabel(run: RunCommand, repo: string) {
+  await run("gh", [
+    "label",
+    "create",
+    EXPLORE_LABEL,
+    "--repo",
+    repo,
+    "--color",
+    "5319E7",
+    "--description",
+    "The factory explores this ticket",
+    "--force",
+  ]);
+}
+
 export async function fileFeedbackIssue(deps: FeedbackDeps, form: FormData) {
   if (!deps.isDev) throw data("Not found", { status: 404 });
 
@@ -50,6 +73,7 @@ export async function fileFeedbackIssue(deps: FeedbackDeps, form: FormData) {
   }
 
   const repo = await originRepo(deps.run);
+  await ensureExploreLabel(deps.run, repo);
   const stdout = await deps.run("gh", [
     "issue",
     "create",
@@ -59,6 +83,8 @@ export async function fileFeedbackIssue(deps: FeedbackDeps, form: FormData) {
     parsed.data.title,
     "--body",
     issueBody(parsed.data),
+    "--label",
+    EXPLORE_LABEL,
   ]);
 
   return { issueUrl: stdout.trim() };

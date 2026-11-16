@@ -40,6 +40,21 @@ describe("fileIssue", () => {
       {
         command: "gh",
         args: [
+          "label",
+          "create",
+          "agent:explore",
+          "--repo",
+          "alice/cadence",
+          "--color",
+          "5319E7",
+          "--description",
+          "The factory explores this ticket",
+          "--force",
+        ],
+      },
+      {
+        command: "gh",
+        args: [
           "issue",
           "create",
           "--repo",
@@ -48,6 +63,8 @@ describe("fileIssue", () => {
           "My long note disappeared",
           "--body",
           "_Sent from the feedback button on `/courses/typescript/lessons/3`._\n\nI clicked Save and the note was gone.\n",
+          "--label",
+          "agent:explore",
         ],
       },
     ]);
@@ -64,7 +81,8 @@ describe("fileIssue", () => {
       feedbackRequest(validFields)
     );
 
-    expect(calls[1].args.slice(2, 4)).toEqual(["--repo", "alice/cadence"]);
+    expect(calls[1].args.slice(3, 5)).toEqual(["--repo", "alice/cadence"]);
+    expect(calls[2].args.slice(2, 4)).toEqual(["--repo", "alice/cadence"]);
   });
 
   it("throws 404 and runs nothing outside dev", async () => {
