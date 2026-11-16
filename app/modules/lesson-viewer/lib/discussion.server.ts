@@ -30,7 +30,7 @@ export type ThreadComment = {
   replies: ThreadComment[];
 };
 
-export function getCourseForLesson(database: Db, lessonId: number) {
+function getCourseForLesson(database: Db, lessonId: number) {
   return database
     .select({
       courseId: courses.id,
