@@ -46,6 +46,15 @@ change to how the module stores its data leaves its tests alone.
 
 Keep every file under 5000 tokens.
 
+## A move changes no behaviour
+
+Code moved to another file arrives as it left. A fix made in the same change
+hides a behaviour change inside a diff that reads as a move. Report each
+violation the moved code carries, on its new line, and leave the fix to a
+change of its own. (The lesson notes ticket: moving one card forced the lesson
+route to be split, and the review then rewrote quiz scoring in the same pull
+request.)
+
 ## Wrap related writes in a transaction
 
 Two writes that must both land, or neither, go in a transaction. If the second
