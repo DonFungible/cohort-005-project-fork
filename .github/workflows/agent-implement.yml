@@ -132,6 +132,14 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Install agent-browser
+        # The agent checks its work in a real browser
+        # (docs/agents/agent-browser.md). Installed here so no run spends its
+        # own time on it.
+        run: |
+          npm install -g agent-browser
+          agent-browser install
+
       - name: Migrate and seed the database
         # The agent gets a real database, because half of this repo's checks
         # need one. It is disposable: a fresh one, migrated and seeded, on
@@ -257,6 +265,15 @@ jobs:
             --body-file "$body_file" \
             "${attach[@]}")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Run the checks
+        # The agent says its checks pass; this is where the factory finds out.
+        # It runs after the pull request opens, so a failure still leaves the
+        # work somewhere a person can read it: the run goes red and the ticket
+        # is marked `agent:blocked`.
+        run: |
+          npm run check
+          npm run build
 
       - name: Mark blocked on failure
         if: failure()

@@ -52,6 +52,21 @@ change you are reporting on trust.
 Screenshots are PR evidence: a before and an after for a change that shows in
 the UI.
 
+## Signing in
+
+Most pages need a user. Pick one by posting their id to the DevUI's own
+endpoint, from a page on the app:
+
+```bash
+agent-browser open http://localhost:5173/courses
+agent-browser eval "fetch('/api/switch-user', {method: 'POST', body: new URLSearchParams({userId: '5'})}).then(r => r.status)"
+```
+
+In the seed data, user 5 (Emma Wilson) is a student enrolled in
+`introduction-to-typescript`, user 2 (Sarah Chen) is that course's instructor
+and user 1 (Alex Rivera) is the admin. For anyone else, read `users` and
+`enrollments` in `data.db` with `sqlite3`.
+
 ## Two things that will bite you
 
 **Hydration lags "networkidle".** The button is in the server HTML before

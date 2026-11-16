@@ -163,6 +163,14 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Install agent-browser
+        # The agent checks its work in a real browser
+        # (docs/agents/agent-browser.md). Installed here so no run spends its
+        # own time on it.
+        run: |
+          npm install -g agent-browser
+          agent-browser install
+
       - name: Migrate and seed the database
         # The pre-commit hook runs on every commit the agent makes, and the
         # repo's checks need a database.
@@ -295,6 +303,13 @@ jobs:
           fi
           gh api --method POST "repos/$GH_REPO/pulls/$TARGET/reviews" \
             --input "$review" --silent
+
+      - name: Run the checks
+        # The review commits fixes, and says its checks pass; this is where
+        # the factory finds out. It runs after the fixes are pushed and the
+        # verdict is posted, so a failure loses neither: the run goes red, the
+        # PR stays a draft and is marked `agent:blocked`.
+        run: npm run check
 
       - name: Mark the pull request ready
         # No `always()` here. If the agent broke, nobody has read the PR, so
