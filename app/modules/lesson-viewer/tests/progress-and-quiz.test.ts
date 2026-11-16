@@ -8,6 +8,8 @@ beforeEach(() => {
   fixture = lessonViewerFixture();
 });
 
+const NOW = new Date("2026-11-16T10:00:00Z");
+
 describe("lesson progress", () => {
   it("marks a lesson in progress, then complete", () => {
     const { viewer, user, lessons } = fixture;
@@ -17,16 +19,16 @@ describe("lesson progress", () => {
       LessonProgressStatus.InProgress
     );
 
-    viewer.markLessonComplete(user.id, lessons[0].id);
+    viewer.markLessonComplete(user.id, lessons[0].id, NOW);
     const progress = viewer.getLessonProgress(user.id, lessons[0].id);
     expect(progress?.status).toBe(LessonProgressStatus.Completed);
-    expect(progress?.completedAt).not.toBeNull();
+    expect(progress?.completedAt).toBe(NOW.toISOString());
   });
 
   it("does not move a completed lesson back to in progress", () => {
     const { viewer, user, lessons } = fixture;
 
-    viewer.markLessonComplete(user.id, lessons[0].id);
+    viewer.markLessonComplete(user.id, lessons[0].id, NOW);
     viewer.markLessonInProgress(user.id, lessons[0].id);
 
     expect(viewer.getLessonProgress(user.id, lessons[0].id)?.status).toBe(
@@ -37,9 +39,9 @@ describe("lesson progress", () => {
   it("lists the learner's progress across every module of the course", () => {
     const { viewer, user, instructor, course, lessons } = fixture;
 
-    viewer.markLessonComplete(user.id, lessons[0].id);
+    viewer.markLessonComplete(user.id, lessons[0].id, NOW);
     viewer.markLessonInProgress(user.id, lessons[2].id);
-    viewer.markLessonComplete(instructor.id, lessons[1].id);
+    viewer.markLessonComplete(instructor.id, lessons[1].id, NOW);
 
     const records = viewer.getLessonProgressForCourse(user.id, course.id);
     expect(records.map((r) => r.lessonId).sort()).toEqual(

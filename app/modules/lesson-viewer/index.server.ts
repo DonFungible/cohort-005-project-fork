@@ -45,8 +45,8 @@ export function createLessonViewer(database: Db) {
       getLessonProgress(database, userId, lessonId),
     getLessonProgressForCourse: (userId: number, courseId: number) =>
       getLessonProgressForCourse(database, userId, courseId),
-    markLessonComplete: (userId: number, lessonId: number) =>
-      markLessonComplete(database, userId, lessonId),
+    markLessonComplete: (userId: number, lessonId: number, now: Date) =>
+      markLessonComplete(database, userId, lessonId, now),
     markLessonInProgress: (userId: number, lessonId: number) =>
       markLessonInProgress(database, userId, lessonId),
     getLastWatchPosition: (userId: number, lessonId: number) =>
