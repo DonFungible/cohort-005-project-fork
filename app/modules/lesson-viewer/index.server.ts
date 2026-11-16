@@ -17,11 +17,11 @@ import {
 } from "./lib/progress";
 import { getLessonThread, renderThread } from "./lib/discussion.server";
 import {
-  computeResult,
   getBestAttempt,
   getQuizById,
   getQuizByLessonId,
   getQuizWithQuestions,
+  submitQuizAttempt,
 } from "./lib/quiz";
 
 export { flattenCourseLessons, type FlatLesson } from "./lib/lesson-data";
@@ -77,11 +77,11 @@ export function createLessonViewer(database: Db) {
      * its answers, and returns the result. Returns null when the quiz does
      * not exist.
      */
-    computeResult: (
+    submitQuizAttempt: (
       userId: number,
       quizId: number,
       selectedAnswers: Record<number, number>
-    ) => computeResult(database, userId, quizId, selectedAnswers),
+    ) => submitQuizAttempt(database, userId, quizId, selectedAnswers),
   };
 }
 

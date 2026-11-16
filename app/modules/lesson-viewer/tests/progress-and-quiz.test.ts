@@ -97,7 +97,7 @@ describe("quizzes", () => {
     const { db, viewer, user, lessons } = fixture;
     const { quiz, questions } = addQuiz(db, lessons[0].id);
 
-    const result = viewer.computeResult(user.id, quiz.id, {
+    const result = viewer.submitQuizAttempt(user.id, quiz.id, {
       [questions[0].id]: questions[0].right,
       [questions[1].id]: questions[1].right,
     });
@@ -121,7 +121,7 @@ describe("quizzes", () => {
     const { db, viewer, user, lessons } = fixture;
     const { quiz, questions } = addQuiz(db, lessons[0].id);
 
-    const result = viewer.computeResult(user.id, quiz.id, {
+    const result = viewer.submitQuizAttempt(user.id, quiz.id, {
       [questions[0].id]: questions[0].wrong,
     });
 
@@ -141,10 +141,10 @@ describe("quizzes", () => {
     const { db, viewer, user, lessons } = fixture;
     const { quiz, questions } = addQuiz(db, lessons[0].id);
 
-    viewer.computeResult(user.id, quiz.id, {
+    viewer.submitQuizAttempt(user.id, quiz.id, {
       [questions[0].id]: questions[0].right,
     });
-    viewer.computeResult(user.id, quiz.id, {});
+    viewer.submitQuizAttempt(user.id, quiz.id, {});
 
     expect(viewer.getBestAttempt(user.id, quiz.id)).toMatchObject({
       score: 0.5,
@@ -154,9 +154,7 @@ describe("quizzes", () => {
 
   it("returns null for a quiz that does not exist", () => {
     const { viewer, user } = fixture;
-    vi.spyOn(console, "error").mockImplementation(() => {});
 
-    expect(viewer.computeResult(user.id, 999, {})).toBeNull();
-    vi.restoreAllMocks();
+    expect(viewer.submitQuizAttempt(user.id, 999, {})).toBeNull();
   });
 });

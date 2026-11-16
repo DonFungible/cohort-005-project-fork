@@ -432,7 +432,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       }
     }
 
-    const result = lessonViewer.computeResult(
+    const result = lessonViewer.submitQuizAttempt(
       currentUserId,
       quizId,
       selectedAnswers
