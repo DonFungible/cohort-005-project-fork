@@ -95,6 +95,17 @@ const INTENT_CAPABILITY: Record<string, Capability | undefined> = {
   "submit-quiz": "take",
 };
 
+/**
+ * Scopes a posted comment id to this lesson, so a comment elsewhere can't be
+ * reached by posting its id to this route.
+ */
+function requireCommentOnLesson(commentId: number, lessonId: number) {
+  const comment = lessonViewer.getCommentById(commentId);
+  if (!comment || comment.lessonId !== lessonId) {
+    throw data("Comment not found", { status: 404 });
+  }
+}
+
 export function meta({ loaderData }: Route.MetaArgs) {
   const title = loaderData?.lesson?.title ?? "Lesson";
   const courseTitle = loaderData?.course?.title ?? "Course";
@@ -337,12 +348,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         if (!parsed.success) {
           return { ok: false, error: "Enter a comment before saving." };
         }
-        // Scope the id to this lesson so a comment elsewhere can't be reached
-        // by posting its id to this route.
-        const existing = lessonViewer.getCommentById(parsed.data.commentId);
-        if (!existing || existing.lessonId !== lessonId) {
-          throw data("Comment not found", { status: 404 });
-        }
+        requireCommentOnLesson(parsed.data.commentId, lessonId);
         const edited = editComment(
           db,
           parsed.data.commentId,
@@ -358,10 +364,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       if (!parsed.success) {
         return { ok: false, error: "Could not delete that comment." };
       }
-      const existing = lessonViewer.getCommentById(parsed.data.commentId);
-      if (!existing || existing.lessonId !== lessonId) {
-        throw data("Comment not found", { status: 404 });
-      }
+      requireCommentOnLesson(parsed.data.commentId, lessonId);
       // Anyone who can view may delete their own posts; moderating someone
       // else's takes the manage capability.
       const decisions = coursePermissions.decide(person, ref);
