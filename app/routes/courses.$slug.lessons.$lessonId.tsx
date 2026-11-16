@@ -21,7 +21,7 @@ import { AlertTriangle } from "lucide-react";
 import { renderMarkdown } from "~/lib/markdown.server";
 import { data, isRouteErrorResponse } from "react-router";
 import { z } from "zod";
-import { parseFormData } from "~/lib/validation";
+import { parseFormData, parseParams } from "~/lib/validation";
 import {
   lessonViewer,
   flattenCourseLessons,
@@ -50,6 +50,21 @@ const saveNoteSchema = z.object({
       MAX_NOTE_LENGTH,
       `Your note is over ${MAX_NOTE_LENGTH.toLocaleString("en")} characters, so it was not saved.`
     ),
+});
+
+const lessonParamsSchema = z.object({
+  lessonId: z.coerce.number().int().positive(),
+});
+
+const submitQuizSchema = z.object({
+  quizId: z.coerce.number().int().positive(),
+});
+
+const QUESTION_FIELD_PREFIX = "question-";
+
+const quizAnswerSchema = z.object({
+  questionId: z.coerce.number().int().positive(),
+  optionId: z.coerce.number().int().positive(),
 });
 
 const deleteCommentSchema = z.object({
@@ -99,7 +114,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const { course, person, enrolled, view, take, manage } = decisions;
   const currentUserId = person?.id ?? null;
-  const lessonId = Number(params.lessonId);
+  const { lessonId } = parseParams(params, lessonParamsSchema);
 
   const courseWithDetails = lessonViewer.getCourseWithDetails(course.id);
   const lesson = lessonViewer.getLessonById(lessonId);
@@ -297,7 +312,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     ref
   );
   const currentUserId = person.id;
-  const lessonId = Number(params.lessonId);
+  const { lessonId } = parseParams(params, lessonParamsSchema);
 
   if (
     intent === "create-comment" ||
@@ -409,10 +424,11 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   if (intent === "submit-quiz") {
-    const quizId = Number(formData.get("quizId"));
-    if (isNaN(quizId)) {
+    const parsedQuiz = parseFormData(formData, submitQuizSchema);
+    if (!parsedQuiz.success) {
       throw data("Invalid quiz ID", { status: 400 });
     }
+    const { quizId } = parsedQuiz.data;
     // Scope the quiz to this lesson so a quiz elsewhere can't be reached by
     // posting its id to this route.
     const quiz = lessonViewer.getQuizById(quizId);
@@ -420,15 +436,16 @@ export async function action({ params, request }: Route.ActionArgs) {
       throw data("Quiz not found", { status: 404 });
     }
 
-    // Collect answers: form fields named "question-{questionId}" with value = optionId
+    // A malformed answer counts as unanswered rather than failing the attempt.
     const selectedAnswers: Record<number, number> = {};
     for (const [key, value] of formData.entries()) {
-      if (key.startsWith("question-")) {
-        const questionId = Number(key.replace("question-", ""));
-        const optionId = Number(value);
-        if (!isNaN(questionId) && !isNaN(optionId)) {
-          selectedAnswers[questionId] = optionId;
-        }
+      if (!key.startsWith(QUESTION_FIELD_PREFIX)) continue;
+      const answer = quizAnswerSchema.safeParse({
+        questionId: key.slice(QUESTION_FIELD_PREFIX.length),
+        optionId: value,
+      });
+      if (answer.success) {
+        selectedAnswers[answer.data.questionId] = answer.data.optionId;
       }
     }
 
