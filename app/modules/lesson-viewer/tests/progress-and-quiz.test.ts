@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { LessonProgressStatus } from "~/db/schema";
-import { addQuiz, addWatchEvent, lessonViewerFixture } from "./fixtures";
+import {
+  addEmptyQuiz,
+  addQuiz,
+  addWatchEvent,
+  lessonViewerFixture,
+} from "./fixtures";
 
 let fixture: ReturnType<typeof lessonViewerFixture>;
 
@@ -91,7 +96,9 @@ describe("quizzes", () => {
     expect(full?.questions.map((q) => q.id)).toEqual(
       questions.map((q) => q.id)
     );
-    expect(full?.questions[0].options).toHaveLength(2);
+    expect(full?.questions.map((q) => q.options.map((o) => o.id))).toEqual(
+      questions.map((q) => [q.wrong, q.right])
+    );
     expect(viewer.getQuizWithQuestions(quiz.id + 1)).toBeNull();
   });
 
@@ -151,6 +158,19 @@ describe("quizzes", () => {
     expect(viewer.getBestAttempt(user.id, quiz.id)).toMatchObject({
       score: 0.5,
       passed: false,
+    });
+  });
+
+  it("scores a quiz with no questions as 0", () => {
+    const { db, viewer, user, lessons } = fixture;
+    const quiz = addEmptyQuiz(db, lessons[0].id);
+
+    expect(viewer.getQuizWithQuestions(quiz.id)?.questions).toEqual([]);
+    expect(viewer.submitQuizAttempt(user.id, quiz.id, {})).toMatchObject({
+      score: 0,
+      passed: false,
+      totalQuestions: 0,
+      questionResults: [],
     });
   });
 

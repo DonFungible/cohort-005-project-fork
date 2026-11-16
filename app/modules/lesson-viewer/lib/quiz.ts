@@ -4,7 +4,6 @@ import {
   quizOptions,
   quizAttempts,
   quizAnswers,
-  QuestionType,
 } from "~/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Db } from "./lesson-data";
@@ -36,20 +35,17 @@ export function getQuizWithQuestions(database: Db, quizId: number) {
     .orderBy(quizQuestions.position)
     .all();
 
-  const options =
-    questions.length === 0
-      ? []
-      : database
-          .select()
-          .from(quizOptions)
-          .where(
-            inArray(
-              quizOptions.questionId,
-              questions.map((q) => q.id)
-            )
-          )
-          .orderBy(quizOptions.id)
-          .all();
+  const options = database
+    .select()
+    .from(quizOptions)
+    .where(
+      inArray(
+        quizOptions.questionId,
+        questions.map((q) => q.id)
+      )
+    )
+    .orderBy(quizOptions.id)
+    .all();
 
   const questionsWithOptions = questions.map((question) => ({
     ...question,
@@ -86,32 +82,19 @@ export type QuestionResult = {
   correctOptionId: number | null;
 };
 
-const SCORED_QUESTION_TYPES: string[] = [
-  QuestionType.MultipleChoice,
-  QuestionType.TrueFalse,
-];
-
-function correctOptionIds(
-  database: Db,
-  questions: Array<{ id: number; questionType: string }>
-) {
-  const scored = questions
-    .filter((q) => SCORED_QUESTION_TYPES.includes(q.questionType))
-    .map((q) => q.id);
-  const byQuestion = new Map<number, number>();
-  if (scored.length === 0) return byQuestion;
-
+function correctOptionIds(database: Db, questionIds: number[]) {
   const correctOptions = database
     .select({ id: quizOptions.id, questionId: quizOptions.questionId })
     .from(quizOptions)
     .where(
       and(
-        inArray(quizOptions.questionId, scored),
+        inArray(quizOptions.questionId, questionIds),
         eq(quizOptions.isCorrect, true)
       )
     )
     .orderBy(quizOptions.id)
     .all();
+  const byQuestion = new Map<number, number>();
   for (const option of correctOptions) {
     if (!byQuestion.has(option.questionId)) {
       byQuestion.set(option.questionId, option.id);
@@ -139,7 +122,10 @@ export function submitQuizAttempt(
     .where(eq(quizQuestions.quizId, quizId))
     .orderBy(quizQuestions.position)
     .all();
-  const correctByQuestion = correctOptionIds(database, questions);
+  const correctByQuestion = correctOptionIds(
+    database,
+    questions.map((q) => q.id)
+  );
 
   const questionResults: QuestionResult[] = questions.map((q) => {
     const selected = selectedAnswers[q.id];

@@ -35,13 +35,18 @@ export function lessonViewerFixture() {
   };
 }
 
-/** A two-question quiz on the lesson: one multiple choice, one true/false. */
-export function addQuiz(db: TestDb, lessonId: number) {
-  const quiz = db
+/** A quiz on the lesson with no questions yet. */
+export function addEmptyQuiz(db: TestDb, lessonId: number) {
+  return db
     .insert(schema.quizzes)
     .values({ lessonId, title: "Check", passingScore: 0.7 })
     .returning()
     .get();
+}
+
+/** A two-question quiz on the lesson: one multiple choice, one true/false. */
+export function addQuiz(db: TestDb, lessonId: number) {
+  const quiz = addEmptyQuiz(db, lessonId);
 
   const questions = [
     { text: "Pick B", type: QuestionType.MultipleChoice, options: ["A", "B"] },
